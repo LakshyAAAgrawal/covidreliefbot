@@ -1,4 +1,4 @@
-# Philomath Bot
+# CovidRelief Bot
 A telegram chatbot to follow Covid resources in India
 
 ## Development Setup
