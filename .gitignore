@@ -1,0 +1,4 @@
+src/config.json
+src/*.pkl
+__pycache__
+src/__pycache__
