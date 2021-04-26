@@ -20,7 +20,9 @@ def start(update, context):
     update.message.reply_text(
         BEGINMSG,
         reply_markup = ReplyKeyboardMarkup(
-            [['Oxygen Cylinder'], ['Oxygen Bed'], ['Medicine'], ['Plasma'], ['Ambulance'], ['Exit']],
+            [['Oxygen']
+             #['Oxygen Bed'], ['Medicine'], ['Plasma'], ['Ambulance'], ['Exit']
+             ],
             one_time_keyboard=True,
             resize_keyboard=True
         ),
@@ -43,8 +45,9 @@ def fetch_info(update, context):
     resource = context.user_data['resource_wanted']
     location = update.message.text
     #update.message.reply_text(fetch_data_from_API(resource, location))
-    context.bot.send_message(chat_id=update.message.chat_id,
-                      text=fetch_data_from_API(resource, location))
+    res_list = fetch_data_from_API(resource, location)
+    for resource in res_list:
+        context.bot.send_message(chat_id=update.message.chat_id, text=resource, parse_mode = ParseMode.MARKDOWN)
     return exit_convo(update, context)
 
 def error(update, context):
@@ -66,11 +69,11 @@ def main():
         entry_points=[CommandHandler('start', start)],
         states={
             MENU: [
-                MessageHandler(Filters.regex('^(Oxygen Cylinder)$'), handle_menu),
-                MessageHandler(Filters.regex('^(Oxygen Bed)$'), handle_menu),
-                MessageHandler(Filters.regex('^(Medicine)$'), handle_menu),
-                MessageHandler(Filters.regex('^(Plasma)$'), handle_menu),
-                MessageHandler(Filters.regex('^(Ambulance)$'), handle_menu)
+                MessageHandler(Filters.regex('^(Oxygen)$'), handle_menu),
+                #MessageHandler(Filters.regex('^(Oxygen Bed)$'), handle_menu),
+                #MessageHandler(Filters.regex('^(Medicine)$'), handle_menu),
+                #MessageHandler(Filters.regex('^(Plasma)$'), handle_menu),
+                #MessageHandler(Filters.regex('^(Ambulance)$'), handle_menu)
             ],
             GET_LOCATION: [MessageHandler(Filters.text, fetch_info)],
         },
