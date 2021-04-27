@@ -69,8 +69,8 @@ def preprocess_img(img):
 
 def process_text(text):
     #text = re.sub('\s+', ' ', text).strip()
-    print(text)
     text = re.sub(r'(\n)+', r'\1', text).lower()
+    print(text)
     ret = "*Contacts*: "
     for match in re.finditer(
             '\+?([0-9-]|\s|\([0-9]+\)){4,20}[0-9]', #r"[0-9][0-9 ]{3,}",
