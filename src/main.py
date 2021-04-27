@@ -95,14 +95,18 @@ def process_text(text):
         location.append("#" + match.group())
     ret = ""
     if contacts:
-        ret += "*Contacts*: " + " ".join(contacts) + "\n"
+        ret += "*Contacts*: " + " ".join(list(set(contacts))) + "\n"
     if resources:
-        ret += "*Resources*: " + " ".join(resources) + "\n"
+        ret += "*Resources*: " + " ".join(list(set(resources))) + "\n"
     if tags:
-        ret += "*Tags*: " + " ".join(tags) + "\n"
+        ret += "*Tags*: " + " ".join(list(set(tags))) + "\n"
     if location:
-        ret += "*Location*: " + " ".join(location) + "\n"
+        ret += "*Location*: " + " ".join(list(set(location))) + "\n"
     return ret
+
+def handle_text(update, context):
+    text = update.message.text
+    process_text(text)
 
 def handle_photo(update, context):
     print(update)
@@ -133,6 +137,7 @@ def main():
     # Add Handlers
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
+    dp.add_handler(MessageHandler(Filters.photo, handle_text))
 
     login_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],

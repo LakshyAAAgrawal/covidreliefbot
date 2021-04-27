@@ -10,11 +10,11 @@ A telegram chatbot to follow Covid resources in India
 3. Enter the configuration details in src/config.json
 4. create a virtual environment for python:
    ```
-   virtualenv philomathbot
+   virtualenv covidreliefbot
    ```
    Activate the virtual environment
    ```
-   source philomathbot/bin/activate
+   source covidreliefbot/bin/activate
    ```
 5. Install the required modules:
    ```
@@ -22,6 +22,8 @@ A telegram chatbot to follow Covid resources in India
    ```
 6. Run the bot
    ```
-   cd src/
+   cd tessdata
+   export export TESSDATA_PREFIX=$(pwd)
+   cd ../src/
    python3 main.py
    ```	
