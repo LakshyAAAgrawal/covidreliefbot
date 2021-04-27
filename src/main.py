@@ -1,8 +1,8 @@
 import logging
 import re
 
-from text_fns import process_text
-from CovidAPI import fetch_data_from_API
+from text_fns import process_text, TextResult
+from CovidAPI import fetch_data_from_API, get_best_resource_for, sync_resource
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -71,7 +71,11 @@ def preprocess_img(img):
 
 def handle_text(update, context):
     text = update.message.text
-    process_text(text)
+    result = TextResult.from_text(text)
+    if(result.msgType == "resource"):
+        sync_resource(result)
+    elif (result.msgType == "request"):
+        get_best_resource_for(result)
 
 def handle_photo(update, context):
     print(update)
@@ -81,9 +85,14 @@ def handle_photo(update, context):
         img_path = imgfile.download()
         image = cv2.imread(img_path)
         text = pytesseract.image_to_string(preprocess_img(image))
-        text = process_text(text + (" " + update.message.text if update.message.text is not None else "") + (" " + update.message['caption'] if update.message.caption is not None else ""))
-        if text != "":
-            update.message.reply_text(text, parse_mode = ParseMode.MARKDOWN)
+        reply = TextResult.from_text(
+            text +
+            (" " + update.message.text if update.message.text is not None else "") +
+            (" " + update.message['caption'] if update.message.caption is not None else "")
+        ).generate_reply()
+
+        if reply != "":
+            update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
 
 def error(update, context):
