@@ -23,7 +23,7 @@ A telegram chatbot to follow Covid resources in India
 6. Run the bot
    ```
    cd tessdata
-   export export TESSDATA_PREFIX=$(pwd)
+   export TESSDATA_PREFIX=$(pwd)
    cd ../src/
    python3 main.py
    ```	
