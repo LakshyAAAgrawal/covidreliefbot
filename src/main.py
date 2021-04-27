@@ -15,6 +15,7 @@ import pytesseract
 import cv2
 import numpy as np
 import re
+from regex_cities import cities_reg
 
 BEGINMSG = "Hi. Welcome to Covid Relief Bot"
 
@@ -71,7 +72,10 @@ def process_text(text):
     #text = re.sub('\s+', ' ', text).strip()
     text = re.sub(r'(\n)+', r'\1', text).lower()
     print(text)
-    ret = "*Contacts*: "
+    contacts = []
+    resources = []
+    tags = []
+    location = []
     for match in re.finditer(
             '\+?([0-9-]|\s|\([0-9]+\)){4,20}[0-9]', #r"[0-9][0-9 ]{3,}",
             text
@@ -79,21 +83,24 @@ def process_text(text):
         x = match.group()
         if sum([c.isdigit() for c in x]) < 6:
             continue
-        ret += x.strip() + ", "
-    ret += "\n*Resources*:"
-    city_reg = re.compile('(mumbai)|(delhi)|(bangalore)|(hyderabad)|(ahmedabad)|(chennai)|(kolkata)|(surat)|(pune)|(jaipur)|(lucknow)|(kanpur)|(nagpur)|(indore)|(thane)|(bhopal)|(visakhapatnam)|(salem)|(pimpri-chinchwad)|(patna)|(vadodara)|(ghaziabad)|(ludhiana)|(agra)|(nashik)|(ranchi)|(faridabad)|(meerut)|(rajkot)|(kalyan-dombivli)|(vasai-virar)|(varanasi)|(srinagar)|(aurangabad)|(dhanbad)|(amritsar)|(navi mumbai)|(allahabad)|(howrah)|(gwalior)|(jabalpur)|(coimbatore)|(vijayawada)|(jodhpur)|(madurai)|(raipur)|(kota)|(chandigarh)|(guwahati)|(solapur)|(hubli–dharwad)|(mysore)|(tiruchirappalli)|(bareilly)|(aligarh)|(tiruppur)|(gurgaon)|(moradabad)|(jalandhar)|(bhubaneswar)|(warangal)|(mira-bhayandar)|(jalgaon)|(guntur)|(thiruvananthapuram)|(bhiwandi)|(saharanpur)|(gorakhpur)|(bikaner)|(amravati)|(noida)|(jamshedpur)|(bhilai)|(cuttack)|(firozabad)|(kochi)|(nellore)|(bhavnagar)|(dehradun)|(durgapur)|(asansol)|(rourkela)|(nanded)|(kolhapur)|(ajmer)|(akola)|(gulbarga)|(jamnagar)|(ujjain)|(loni)|(siliguri)|(jhansi)|(ulhasnagar)|(jammu)|(sangli-miraj & kupwad)|(mangalore)|(erode)|(belgaum)|(kurnool)|(ambattur)|(rajahmundry)|(tirunelveli)|(malegaon)|(gaya)|(tirupati)|(udaipur)|(kakinada)|(davanagere)|(kozhikode)|(maheshtala)|(rajpur sonarpur)|(bokaro)|(south dumdum)|(bellary)|(patiala)|(gopalpur)|(agartala)|(bhagalpur)|(muzaffarnagar)|(bhatpara)|(panihati)|(latur)|(dhule)|(rohtak)|(sagar)|(korba)|(bhilwara)|(berhampur)|(muzaffarpur)|(ahmednagar)|(mathura)|(kollam)|(avadi)|(kadapa)|(anantapuram)|(kamarhati)|(bilaspur)|(sambalpur)|(shahjahanpur)|(satara)|(bijapur)|(rampur)|(shimoga)|(chandrapur)|(junagadh)|(thrissur)|(alwar)|(bardhaman)|(kulti)|(nizamabad)|(parbhani)|(tumkur)|(khammam)|(uzhavarkarai)|(bihar sharif)|(panipat)|(darbhanga)|(bally)|(aizawl)|(dewas)|(ichalkaranji)|(karnal)|(bathinda)|(jalna)|(eluru)|(barasat)|(kirari suleman nagar)|(purnia)|(satna)|(mau)|(sonipat)|(farrukhabad)|(durg)|(imphal)|(ratlam)|(hapur)|(arrah)|(anantapur)|(karimnagar)|(etawah)|(ambarnath)|(north dumdum)|(bharatpur)|(begusarai)|(new delhi)|(gandhidham)|(baranagar)|(tiruvottiyur)|(pondicherry)|(sikar)|(thoothukudi)|(rewa)|(mirzapur)|(raichur)|(pali)|(ramagundam)|(silchar)|(haridwar)|(vijayanagaram)|(tenali)|(nagercoil)|(sri ganganagar)|(karawal nagar)|(mango)|(thanjavur)|(bulandshahr)|(uluberia)|(katni)|(sambhal)|(singrauli)|(nadiad)|(secunderabad)|(naihati)|(yamunanagar)|(bidhannagar)|(pallavaram)|(bidar)|(munger)|(panchkula)|(burhanpur)|(raurkela industrial township)|(kharagpur)|(dindigul)|(gandhinagar)|(hospet)|(nangloi jat)|(malda)|(ongole)|(deoghar)|(chapra)|(haldia)|(khandwa)|(nandyal)|(morena)|(amroha)|(anand)|(bhind)|(bhalswa jahangir pur)|(madhyamgram)|(bhiwani)|(berhampore)|(ambala)|(morbi)|(fatehpur)|(raebareli)|(khora, ghaziabad)|(chittoor)|(bhusawal)|(orai)|(bahraich)|(phusro)|(vellore)|(mehsana)|(raiganj)|(sirsa)|(danapur)|(serampore)|(sultan pur majra)|(guna)|(jaunpur)|(panvel)|(shivpuri)|(surendranagar dudhrej)|(unnao)|(chinsurah)|(alappuzha)|(kottayam)|(machilipatnam)|(shimla)|(adoni)|(udupi)|(katihar)|(proddatur)|(mahbubnagar)|(saharsa)|(dibrugarh)|(jorhat)|(hazaribagh)|(hindupur)|(nagaon)|(sasaram)|(hajipur)|(port blair)|(giridih)|(bhimavaram)|(kumbakonam)|(bongaigaon)|(dehri)|(madanapalle)|(siwan)|(bettiah)|(ramgarh)|(tinsukia)|(guntakal)|(srikakulam)|(motihari)|(dharmavaram)|(medininagar)|(gudivada)|(phagwara)|(pudukkottai)|(hosur)|(narasaraopet)|(suryapet)|(miryalaguda)|(tadipatri)|(karaikudi)|(kishanganj)|(jamalpur)|(ballia)|(kavali)|(tadepalligudem)|(amaravati)|(buxar)|(tezpur)|(jehanabad)|(aurangabad)|(gangtok)|(vasco da gama)')
+        contacts.append(x.strip())
     for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)', text):
-        ret += ' #' + match.group()
-    ret +="\n*Tags*:"
+        resources.append("#"+match.group())
     for match in re.finditer('#[0-9A-Za-z]*', text):
-        ret += ' ' + match.group()
-    for match in re.finditer('(urgent)|(request)|(need)|(required)', text):
-        ret += ' #' + match.group()
-    ret += "\n*Location*:"
-    for match in re.finditer(city_reg, text):
-        ret += " #" + match.group()
-    if ret == "*Contacts*: \n*Resources*:\n*Tags*:\n*Location*:":
-        return ""
+        tags.append(match.group())
+    for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)', text):
+        tags.append("#"+match.group())
+    for match in re.finditer(cities_reg, text):
+        location.append("#" + match.group())
+    ret = ""
+    if contacts:
+        ret += "*Contacts*: " + " ".join(contacts) + "\n"
+    if resources:
+        ret += "*Resources*: " + " ".join(resources) + "\n"
+    if tags:
+        ret += "*Tags*: " + " ".join(tags) + "\n"
+    if location:
+        ret += "*Location*: " + " ".join(location) + "\n"
     return ret
 
 def handle_photo(update, context):
