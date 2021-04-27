@@ -72,9 +72,9 @@ def preprocess_img(img):
 def handle_text(update, context):
     text = update.message.text
     result = TextResult.from_text(text)
-    if(result.msgType == "resource"):
+    if(result.msg_type == "resource"):
         sync_resource(result)
-    elif (result.msgType == "request"):
+    elif (result.msg_type == "request"):
         get_best_resource_for(result)
 
 def handle_photo(update, context):
