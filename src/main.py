@@ -71,7 +71,8 @@ def preprocess_img(img):
 def process_text(text):
     #text = re.sub('\s+', ' ', text).strip()
     text = re.sub(r'(\n)+', r'\1', text).lower()
-    print(text)
+    with open("Messages.txt", "a") as f:
+        f.write(text + "\n\n")
     contacts = []
     resources = []
     tags = []
@@ -84,11 +85,11 @@ def process_text(text):
         if sum([c.isdigit() for c in x]) < 6:
             continue
         contacts.append(x.strip())
-    for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)', text):
+    for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)', text):
         resources.append("#"+match.group())
     for match in re.finditer('#[0-9A-Za-z]*', text):
         tags.append(match.group())
-    for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)', text):
+    for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)|(require)', text):
         tags.append("#"+match.group())
     for match in re.finditer(cities_reg, text):
         location.append("#" + match.group())
@@ -104,13 +105,14 @@ def process_text(text):
     return ret
 
 def handle_photo(update, context):
+    print(update)
     for img_dict in update.message['photo'][-1:]:
         file_id = img_dict['file_id']
         imgfile = context.bot.get_file(file_id)
         img_path = imgfile.download()
         image = cv2.imread(img_path)
         text = pytesseract.image_to_string(preprocess_img(image))
-        text = process_text(text)
+        text = process_text(text + (" " + update.message.text if update.message.text is not None else "") + (" " + update.message['caption'] if update.message.caption is not None else ""))
         if text != "":
             update.message.reply_text(text, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
