@@ -137,7 +137,7 @@ def main():
     # Add Handlers
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
-    dp.add_handler(MessageHandler(Filters.photo, handle_text))
+    dp.add_handler(MessageHandler(Filters.text, handle_text))
 
     login_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
