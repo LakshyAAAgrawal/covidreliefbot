@@ -27,6 +27,8 @@ def fetch_data_from_API(resource, location):
             ret = ""
             ret += "===============\n"
             for col in row.index:
+                if row[col] == "":
+                    continue
                 ret += "{}: *{}*\n".format(col, row[col])
             ret += "===============\n"
             res.append(ret)
