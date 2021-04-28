@@ -84,7 +84,7 @@ def process_text(text, return_all=False):
         if sum([c.isdigit() for c in x]) < 6:
             continue
         contacts.append(x.strip())
-    for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)', text):
+    for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)|(beds)|(home icu)|(favipiravir)|(tocilizumab)|(fabiflu)|(test)|(tests)', text):
         resources.append(match.group())
     for match in re.finditer('#[0-9A-Za-z]*', text):
         tags.append(match.group()[1:])
