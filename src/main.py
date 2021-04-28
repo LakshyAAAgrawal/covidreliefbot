@@ -1,7 +1,7 @@
 import logging
 import re
 
-from CovidAPI import fetch_data_from_API
+from CovidAPI import fetch_data_from_API, get_twitter_link
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -35,7 +35,6 @@ def start(update, context):
         #    resize_keyboard=True
         #),
     )
-    return MENU
 
 def exit_convo(update, context):
     start(update, context)
@@ -68,7 +67,7 @@ def preprocess_img(img):
     #img = cv2.medianBlur(img,5)
     return img
 
-def process_text(text):
+def process_text(text, return_all=False):
     #text = re.sub('\s+', ' ', text).strip()
     text = re.sub(r'(\n)+', r'\1', text).lower()
     with open("Messages.txt", "a") as f:
@@ -86,23 +85,26 @@ def process_text(text):
             continue
         contacts.append(x.strip())
     for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)', text):
-        resources.append("#"+match.group())
+        resources.append(match.group())
     for match in re.finditer('#[0-9A-Za-z]*', text):
-        tags.append(match.group())
+        tags.append(match.group()[1:])
     for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)|(require)', text):
-        tags.append("#"+match.group())
+        tags.append(match.group())
     for match in re.finditer(cities_reg, text):
-        location.append("#" + match.group())
+        location.append(match.group())
     ret = ""
     if contacts:
         ret += "*Contacts*: " + " ".join(list(set(contacts))) + "\n"
     if resources:
-        ret += "*Resources*: " + " ".join(list(set(resources))) + "\n"
+        ret += "*Resources*: " + " ".join(map(lambda x: "#"+x, list(set(resources)))) + "\n"
     if tags:
-        ret += "*Tags*: " + " ".join(list(set(tags))) + "\n"
+        ret += "*Tags*: " + " ".join(map(lambda x: "#"+x, list(set(tags)))) + "\n"
     if location:
-        ret += "*Location*: " + " ".join(list(set(location))) + "\n"
-    return ret
+        ret += "*Location*: " + " ".join(map(lambda x: "#"+x, list(set(location)))) + "\n"
+    if return_all:
+        return ret, contacts, resources, tags, location
+    else:
+        return ret
 
 def handle_text(update, context):
     text = update.message.text
@@ -121,6 +123,19 @@ def handle_photo(update, context):
             update.message.reply_text(text, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
 
+def handle_tweet_request(update, context):
+    print("handle_tweet_request", update)
+    try:
+        _, _, resources, tags, location = process_text(update["message"]["reply_to_message"]["text"], True)
+        tweet_link = get_twitter_link(location, resources)
+        if tweet_link == "":
+            update.message.reply_text("Couldn\'t find resources or city name")
+        else:
+            update.message.reply_text(text = "[Tweets for {}]({})".format(" ".join(resources + location), tweet_link), parse_mode = ParseMode.MARKDOWN)
+    except Exception as e:
+        print(e)
+        update.message.reply_text("Please send the command as a reply to a message for which you would like twitter leads")
+        
 def error(update, context):
     """Log Errors caused by Updates."""
     print(context.error)
@@ -135,6 +150,7 @@ def main():
     dp = updater.dispatcher
     
     # Add Handlers
+    dp.add_handler(CommandHandler("tweets", handle_tweet_request))
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
