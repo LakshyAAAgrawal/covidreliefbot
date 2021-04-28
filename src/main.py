@@ -16,7 +16,6 @@ import pytesseract
 import cv2
 import numpy as np
 import re
-from regex_cities import cities_reg
 
 BEGINMSG = "Hi. Welcome to Covid Relief Bot"
 

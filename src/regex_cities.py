@@ -449,7 +449,6 @@ cities_list = [
     "mukerian",
     "mukhed",
     "muktsar",
-    "mul",
     "mulbagal",
     "multai",
     "greater mumbai*",
@@ -962,7 +961,7 @@ cities_list = [
     "sinnar",
     "sira",
     "sircilla",
-    "sirhind fatehgarh sahib",
+    "fatehgarh",
     "sirkali",
     "sirohi",
     "sironj",
@@ -997,7 +996,7 @@ cities_list = [
     "srinagar",
     "srinagar",
     "srinivaspur",
-    "srisailam project (right flank colony) township",
+    "srisailam",
     "srirampore",
     "srivilliputhur",
     "suar",
@@ -1215,5 +1214,6 @@ cities_list = [
     "ncr",
     "bharatpur"
 ]
-s = "(" + ")|(".join(cities_list) + ")"
-cities_reg = re.compile("((" + ")|(".join(cities_list) + ")){e<=1}")
+#s = "|".join(map(lambda x: "(" + x + ")" + ("{d<=1,i<=1,i+d<=1}" if len(x) > 4 else ""), cities_list)) #"(" + ")|(".join(cities_list) + ")" 
+#cities_reg = re.compile("(" + ")|(".join(map(lambda x: x if len(x) <=4 else x + "{i+d<=1}", cities_list)) + ")")
+#cities_reg = re.compile(s)

@@ -2,7 +2,7 @@ import logging
 import regex as re
 
 from utils import contains_iter
-from regex_cities import cities_reg
+from regex_cities import cities_list
 
 class TextResult():
     def __init__(self, full_text, contacts = [], resources = [], location = [],
@@ -51,20 +51,27 @@ def process_text(text):
         if sum([c.isdigit() for c in x]) < 6:
             continue
         contacts.append(x.strip())
-    for match in re.finditer('((oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)|(beds)|(home icu)|(favipiravir)|(tocilizumab)|(fabiflu)|(test)|(tests)){e<=1}', text):
-        resources.append(match.group())
-        message_type = "resource"
+        
     for match in re.finditer('#[0-9A-Za-z]*', text):
         tags.append(match.group()[1:])
-    for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)|(require)', text):
-        tags.append(match.group())
+
+    for match in contains_iter(['oxygen', 'cylinder', 'ventilator', 'plasma', 'bed', 'icu', 'refill', 'ambulance', 'food', 'remdisivir', 'hospital', 'remdesivir', 'concentrator', 'beds', 'home icu', 'favipiravir', 'tocilizumab', 'fabiflu', 'test', 'tests'], text, "{i<=1,s<=1,d<=1,i+d+s<=1}"):
+        resources.append(match)
+        message_type = "resource"
+
+    for match in contains_iter(['urgent', 'request', 'need', 'required', 'fraud', 'fake', 'require'], text):
+        tags.append(match)
+
     for match in contains_iter(["urgent", "require", "need", "please", "pls", "request"], text):
         message_type = "request"
-    for match in re.finditer(cities_reg, text):
-        location.append(match.group())
+
+    for match in contains_iter(cities_list, text, "{i<=1,s<=1,d<=1,i+d+s<=1}"):
+        location.append(match)
+
     ret = {}
     ret["Contacts"] = list(set(contacts))
     ret["Resources"] = list(set(resources))
     ret["Tags"] = list(set(tags))
     ret["Location"] = list(set(location))
+    print()
     return ret, message_type
