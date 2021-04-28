@@ -1,5 +1,5 @@
 import logging
-import re
+import regex as re
 
 from text_fns import process_text, TextResult
 from CovidAPI import fetch_data_from_API, get_twitter_link, get_best_resource_for, sync_resource

@@ -1,5 +1,5 @@
 import logging
-import re
+import regex as re
 
 from utils import contains_iter
 from regex_cities import cities_reg
@@ -32,8 +32,7 @@ class TextResult():
         d, msg_type = process_text(text)
         result = TextResult(text, d["Contacts"], d["Resources"], d["Location"], d["Tags"], msg_type)
         return result
-
-
+  
 def process_text(text):
     #text = re.sub('\s+', ' ', text).strip()
     text = re.sub(r'(\n)+', r'\1', text).lower()
@@ -52,7 +51,7 @@ def process_text(text):
         if sum([c.isdigit() for c in x]) < 6:
             continue
         contacts.append(x.strip())
-    for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)', text):
+    for match in re.finditer('((oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)|(beds)|(home icu)|(favipiravir)|(tocilizumab)|(fabiflu)|(test)|(tests)){e<=1}', text):
         resources.append(match.group())
         message_type = "resource"
     for match in re.finditer('#[0-9A-Za-z]*', text):

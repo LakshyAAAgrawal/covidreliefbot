@@ -1,4 +1,4 @@
-import re
+import regex as re
 # TODO: Use fuzzy regex
 cities_list = [
     "achalpur",
@@ -1216,4 +1216,4 @@ cities_list = [
     "bharatpur"
 ]
 s = "(" + ")|(".join(cities_list) + ")"
-cities_reg = re.compile("(" + ")|(".join(cities_list) + ")")
+cities_reg = re.compile("((" + ")|(".join(cities_list) + ")){e<=1}")
