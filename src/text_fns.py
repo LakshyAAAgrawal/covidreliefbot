@@ -2,6 +2,7 @@ import logging
 import re
 
 from utils import contains_iter
+from regex_cities import cities_reg
 
 class TextResult():
     def __init__(self, full_text, contacts = [], resources = [], location = [],

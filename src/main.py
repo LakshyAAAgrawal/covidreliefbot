@@ -61,9 +61,10 @@ def fetch_info(update, context):
 def preprocess_img(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     kernel = np.ones((1, 1), np.uint8)
-    img = cv2.dilate(img, kernel, iterations=1)
-    img = cv2.erode(img, kernel, iterations=1)
-    img = cv2.threshold(cv2.medianBlur(img, 3), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+    #img = cv2.dilate(img, kernel, iterations=1)
+    #img = cv2.erode(img, kernel, iterations=1)
+    # cv2.medianBlur(img, 3)
+    img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
     #img = cv2.GaussianBlur(thresh, (5,5), 0)
     #img = cv2.medianBlur(img,5)
     return img
@@ -97,8 +98,17 @@ def handle_photo(update, context):
 def handle_tweet_request(update, context):
     print("handle_tweet_request", update)
     try:
-        text_ret = TextResult.from_text(process_text(update["message"]["reply_to_message"]["text"]))
-        tweet_link = get_twitter_link(text_ret.location, text_ret.resources)
+        if len(context.args) == 0:
+            text_to_process = update["message"]["reply_to_message"]["text"]
+        else:
+            text_to_process = " ".join(context.args)
+        text_ret = TextResult.from_text(text_to_process)  #process_text(update["message"]["reply_to_message"]["text"])
+        location, resources = text_ret.location, text_ret.resources
+        #tweet_link = get_twitter_link(text_ret.location, text_ret.resources)
+        #_, _, resources, tags, location = process_text(text_to_process, True)
+        if location == []:
+            location = ["delhi"]
+        tweet_link = get_twitter_link(location, resources)
         if tweet_link == "":
             update.message.reply_text("Couldn\'t find resources or city name")
         else:
@@ -121,7 +131,7 @@ def main():
     dp = updater.dispatcher
     
     # Add Handlers
-    dp.add_handler(CommandHandler("tweets", handle_tweet_request))
+    dp.add_handler(CommandHandler("tweets", handle_tweet_request, pass_args = True))
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
