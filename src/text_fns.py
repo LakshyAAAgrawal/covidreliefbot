@@ -18,11 +18,11 @@ class TextResult():
         if(self.contacts):
             text+="*Contacts*: " + " ".join(self.contacts) + "\n"
         if(self.resources):
-            text+="*Resources*: " + " ".join(self.resources) + "\n"
+            text+="*Resources*: " + " ".join(map(lambda x: "#"+x, self.resources)) + "\n"
         if(self.location):
-            text+="*Location*: " + " ".join(self.location) + "\n"
+            text+="*Location*: " + " ".join(map(lambda x: "#"+x, self.location)) + "\n"
         if(self.tags):
-            text+="*Tags*: " + " ".join(self.tags) + "\n"
+            text+="*Tags*: " + " ".join(map(lambda x: "#"+x, self.tags)) + "\n"
 
         return text
 
@@ -52,10 +52,10 @@ def process_text(text):
             continue
         contacts.append(x.strip())
     for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)', text):
-        resources.append("#"+match.group())
+        resources.append(match.group())
         message_type = "resource"
     for match in re.finditer('#[0-9A-Za-z]*', text):
-        tags.append(match.group())
+        tags.append(match.group()[1:])
     for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)|(require)', text):
         tags.append("#"+match.group())
     for match in contains_iter(["urgent", "require", "need", "please", "pls", "request"], text):

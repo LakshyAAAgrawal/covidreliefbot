@@ -2,7 +2,7 @@ import logging
 import re
 
 from text_fns import process_text, TextResult
-from CovidAPI import fetch_data_from_API, get_best_resource_for, sync_resource
+from CovidAPI import fetch_data_from_API, get_twitter_link, get_best_resource_for, sync_resource
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -36,7 +36,6 @@ def start(update, context):
         #    resize_keyboard=True
         #),
     )
-    return MENU
 
 def exit_convo(update, context):
     start(update, context)
@@ -95,6 +94,19 @@ def handle_photo(update, context):
             update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
 
+def handle_tweet_request(update, context):
+    print("handle_tweet_request", update)
+    try:
+        text_ret = TextResult.from_text(process_text(update["message"]["reply_to_message"]["text"]))
+        tweet_link = get_twitter_link(text_ret.location, text_ret.resources)
+        if tweet_link == "":
+            update.message.reply_text("Couldn\'t find resources or city name")
+        else:
+            update.message.reply_text(text = "[Tweets for {}]({})".format(" ".join(resources + location), tweet_link), parse_mode = ParseMode.MARKDOWN)
+    except Exception as e:
+        print(e)
+        update.message.reply_text("Please send the command as a reply to a message for which you would like twitter leads")
+        
 def error(update, context):
     """Log Errors caused by Updates."""
     print(context.error)
@@ -109,6 +121,7 @@ def main():
     dp = updater.dispatcher
     
     # Add Handlers
+    dp.add_handler(CommandHandler("tweets", handle_tweet_request))
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
     dp.add_handler(MessageHandler(Filters.text, handle_text))

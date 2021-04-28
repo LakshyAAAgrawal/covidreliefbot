@@ -1210,7 +1210,8 @@ cities_list = [
     "zira",
     "zirakpur",
     "zunheboto",
-    "ncr"
+    "ncr",
+    "bharatpur"
 ]
 s = "(" + ")|(".join(cities_list) + ")"
 cities_reg = re.compile("(" + ")|(".join(cities_list) + ")")
