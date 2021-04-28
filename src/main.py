@@ -1,7 +1,8 @@
 import logging
 import re
 
-from CovidAPI import fetch_data_from_API
+from text_fns import process_text, TextResult
+from CovidAPI import fetch_data_from_API, get_best_resource_for, sync_resource
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -68,45 +69,13 @@ def preprocess_img(img):
     #img = cv2.medianBlur(img,5)
     return img
 
-def process_text(text):
-    #text = re.sub('\s+', ' ', text).strip()
-    text = re.sub(r'(\n)+', r'\1', text).lower()
-    with open("Messages.txt", "a") as f:
-        f.write(text + "\n\n")
-    contacts = []
-    resources = []
-    tags = []
-    location = []
-    for match in re.finditer(
-            '\+?([0-9-]|\s|\([0-9]+\)){4,20}[0-9]', #r"[0-9][0-9 ]{3,}",
-            text
-    ):
-        x = match.group()
-        if sum([c.isdigit() for c in x]) < 6:
-            continue
-        contacts.append(x.strip())
-    for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)', text):
-        resources.append("#"+match.group())
-    for match in re.finditer('#[0-9A-Za-z]*', text):
-        tags.append(match.group())
-    for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)|(require)', text):
-        tags.append("#"+match.group())
-    for match in re.finditer(cities_reg, text):
-        location.append("#" + match.group())
-    ret = ""
-    if contacts:
-        ret += "*Contacts*: " + " ".join(list(set(contacts))) + "\n"
-    if resources:
-        ret += "*Resources*: " + " ".join(list(set(resources))) + "\n"
-    if tags:
-        ret += "*Tags*: " + " ".join(list(set(tags))) + "\n"
-    if location:
-        ret += "*Location*: " + " ".join(list(set(location))) + "\n"
-    return ret
-
 def handle_text(update, context):
     text = update.message.text
-    process_text(text)
+    result = TextResult.from_text(text)
+    if(result.msg_type == "resource"):
+        sync_resource(result)
+    elif (result.msg_type == "request"):
+        get_best_resource_for(result)
 
 def handle_photo(update, context):
     print(update)
@@ -116,9 +85,14 @@ def handle_photo(update, context):
         img_path = imgfile.download()
         image = cv2.imread(img_path)
         text = pytesseract.image_to_string(preprocess_img(image))
-        text = process_text(text + (" " + update.message.text if update.message.text is not None else "") + (" " + update.message['caption'] if update.message.caption is not None else ""))
-        if text != "":
-            update.message.reply_text(text, parse_mode = ParseMode.MARKDOWN)
+        reply = TextResult.from_text(
+            text +
+            (" " + update.message.text if update.message.text is not None else "") +
+            (" " + update.message['caption'] if update.message.caption is not None else "")
+        ).generate_reply()
+
+        if reply != "":
+            update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
 
 def error(update, context):
