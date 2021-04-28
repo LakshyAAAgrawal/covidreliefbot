@@ -4,6 +4,8 @@ import requests
 import json
 import urllib.parse
 
+from text_fns import TextResult
+
 def get_url(sheet_id, gid):
     return "https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&gid={}".format(sheet_id, gid)
 
@@ -43,3 +45,9 @@ def get_twitter_link(cities, resources):
     return "https://twitter.com/search?q=" + urllib.parse.quote_plus(
         '({}) ({}) -"needed" -"need" -"needs" -"required" -"require" -"requires" -"requirement" -"requirements"'.format(" OR ".join(cities), " OR ".join(resources))
     ) + "&f=live"
+
+def get_best_resource_for(text_request):
+    pass
+
+def sync_resource(text_resource):
+    pass

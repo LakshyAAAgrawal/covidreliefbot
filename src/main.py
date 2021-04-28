@@ -1,7 +1,8 @@
 import logging
 import re
 
-from CovidAPI import fetch_data_from_API, get_twitter_link
+from text_fns import process_text, TextResult
+from CovidAPI import fetch_data_from_API, get_twitter_link, get_best_resource_for, sync_resource
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -67,48 +68,13 @@ def preprocess_img(img):
     #img = cv2.medianBlur(img,5)
     return img
 
-def process_text(text, return_all=False):
-    #text = re.sub('\s+', ' ', text).strip()
-    text = re.sub(r'(\n)+', r'\1', text).lower()
-    with open("Messages.txt", "a") as f:
-        f.write(text + "\n\n")
-    contacts = []
-    resources = []
-    tags = []
-    location = []
-    for match in re.finditer(
-            '\+?([0-9-]|\s|\([0-9]+\)){4,20}[0-9]', #r"[0-9][0-9 ]{3,}",
-            text
-    ):
-        x = match.group()
-        if sum([c.isdigit() for c in x]) < 6:
-            continue
-        contacts.append(x.strip())
-    for match in re.finditer('(oxygen)|(cylinder)|(ventilator)|(plasma)|(bed)|(icu)|(refill)|(ambulance)|(food)|(remdisivir)|(hospital)|(remdesivir)|(concentrator)|(beds)|(home icu)|(favipiravir)|(tocilizumab)|(fabiflu)|(test)|(tests)', text):
-        resources.append(match.group())
-    for match in re.finditer('#[0-9A-Za-z]*', text):
-        tags.append(match.group()[1:])
-    for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)|(require)', text):
-        tags.append(match.group())
-    for match in re.finditer(cities_reg, text):
-        location.append(match.group())
-    ret = ""
-    if contacts:
-        ret += "*Contacts*: " + " ".join(list(set(contacts))) + "\n"
-    if resources:
-        ret += "*Resources*: " + " ".join(map(lambda x: "#"+x, list(set(resources)))) + "\n"
-    if tags:
-        ret += "*Tags*: " + " ".join(map(lambda x: "#"+x, list(set(tags)))) + "\n"
-    if location:
-        ret += "*Location*: " + " ".join(map(lambda x: "#"+x, list(set(location)))) + "\n"
-    if return_all:
-        return ret, contacts, resources, tags, location
-    else:
-        return ret
-
 def handle_text(update, context):
     text = update.message.text
-    process_text(text)
+    result = TextResult.from_text(text)
+    if(result.msg_type == "resource"):
+        sync_resource(result)
+    elif (result.msg_type == "request"):
+        get_best_resource_for(result)
 
 def handle_photo(update, context):
     print(update)
@@ -118,16 +84,21 @@ def handle_photo(update, context):
         img_path = imgfile.download()
         image = cv2.imread(img_path)
         text = pytesseract.image_to_string(preprocess_img(image))
-        text = process_text(text + (" " + update.message.text if update.message.text is not None else "") + (" " + update.message['caption'] if update.message.caption is not None else ""))
-        if text != "":
-            update.message.reply_text(text, parse_mode = ParseMode.MARKDOWN)
+        reply = TextResult.from_text(
+            text +
+            (" " + update.message.text if update.message.text is not None else "") +
+            (" " + update.message['caption'] if update.message.caption is not None else "")
+        ).generate_reply()
+
+        if reply != "":
+            update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
 
 def handle_tweet_request(update, context):
     print("handle_tweet_request", update)
     try:
-        _, _, resources, tags, location = process_text(update["message"]["reply_to_message"]["text"], True)
-        tweet_link = get_twitter_link(location, resources)
+        text_ret = TextResult.from_text(process_text(update["message"]["reply_to_message"]["text"]))
+        tweet_link = get_twitter_link(text_ret.location, text_ret.resources)
         if tweet_link == "":
             update.message.reply_text("Couldn\'t find resources or city name")
         else:
