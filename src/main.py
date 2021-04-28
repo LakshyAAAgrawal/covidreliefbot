@@ -17,6 +17,7 @@ import cv2
 import numpy as np
 import re
 from regex_cities import cities_reg
+from image_vision_utils import preprocess_img
 
 BEGINMSG = "Hi. Welcome to Covid Relief Bot"
 
@@ -59,15 +60,15 @@ def fetch_info(update, context):
         context.bot.send_message(chat_id=update.message.chat_id, text=resource, parse_mode = ParseMode.MARKDOWN)
     return exit_convo(update, context)
 
-def preprocess_img(img):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    kernel = np.ones((1, 1), np.uint8)
-    img = cv2.dilate(img, kernel, iterations=1)
-    img = cv2.erode(img, kernel, iterations=1)
-    img = cv2.threshold(cv2.medianBlur(img, 3), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-    #img = cv2.GaussianBlur(thresh, (5,5), 0)
-    #img = cv2.medianBlur(img,5)
-    return img
+# def preprocess_img(img):
+#     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     kernel = np.ones((1, 1), np.uint8)
+#     img = cv2.dilate(img, kernel, iterations=1)
+#     img = cv2.erode(img, kernel, iterations=1)
+#     img = cv2.threshold(cv2.medianBlur(img, 3), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+#     #img = cv2.GaussianBlur(thresh, (5,5), 0)
+#     #img = cv2.medianBlur(img,5)
+#     return img
 
 def handle_text(update, context):
     text = update.message.text
@@ -83,8 +84,8 @@ def handle_photo(update, context):
         file_id = img_dict['file_id']
         imgfile = context.bot.get_file(file_id)
         img_path = imgfile.download()
-        image = cv2.imread(img_path)
-        text = pytesseract.image_to_string(preprocess_img(image))
+        # image = cv2.imread(img_path)
+        text = pytesseract.image_to_string(preprocess_img(img_path))
         reply = TextResult.from_text(
             text +
             (" " + update.message.text if update.message.text is not None else "") +
