@@ -58,11 +58,11 @@ def process_text(text):
     for match in re.finditer('#[0-9A-Za-z]*', text):
         tags.append(match.group()[1:])
     for match in re.finditer('(urgent)|(request)|(need)|(required)|(fraud)|(fake)|(require)', text):
-        tags.append("#"+match.group())
+        tags.append(match.group())
     for match in contains_iter(["urgent", "require", "need", "please", "pls", "request"], text):
         message_type = "request"
     for match in re.finditer(cities_reg, text):
-        location.append("#" + match.group())
+        location.append(match.group())
     ret = {}
     ret["Contacts"] = list(set(contacts))
     ret["Resources"] = list(set(resources))
