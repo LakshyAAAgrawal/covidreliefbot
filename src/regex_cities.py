@@ -1,4 +1,5 @@
 import re
+# TODO: Use fuzzy regex
 cities_list = [
     "achalpur",
     "achhnera",
@@ -524,6 +525,7 @@ cities_list = [
     "nautanwa",
     "navalgund",
     "navi mumbai",
+    "mumbai"
     "navsari",
     "nawabganj",
     "nawada",
@@ -1210,7 +1212,8 @@ cities_list = [
     "zira",
     "zirakpur",
     "zunheboto",
-    "ncr"
+    "ncr",
+    "bharatpur"
 ]
 s = "(" + ")|(".join(cities_list) + ")"
 cities_reg = re.compile("(" + ")|(".join(cities_list) + ")")

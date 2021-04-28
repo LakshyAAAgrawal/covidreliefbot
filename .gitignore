@@ -1,5 +1,11 @@
 *.swp
 src/config.json
 covidreliefbot
-
+src/*.jpg
+src/Messages.txt
+src/CovidAPI.py~
+src/main.py~
+*~
+src/conversationbot
+src/data_fetch/
 __pycache__

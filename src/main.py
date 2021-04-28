@@ -2,7 +2,7 @@ import logging
 import re
 
 from text_fns import process_text, TextResult
-from CovidAPI import fetch_data_from_API, get_best_resource_for, sync_resource
+from CovidAPI import fetch_data_from_API, get_twitter_link, get_best_resource_for, sync_resource
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -37,7 +37,6 @@ def start(update, context):
         #    resize_keyboard=True
         #),
     )
-    return MENU
 
 def exit_convo(update, context):
     start(update, context)
@@ -63,9 +62,10 @@ def fetch_info(update, context):
 # def preprocess_img(img):
 #     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 #     kernel = np.ones((1, 1), np.uint8)
-#     img = cv2.dilate(img, kernel, iterations=1)
-#     img = cv2.erode(img, kernel, iterations=1)
-#     img = cv2.threshold(cv2.medianBlur(img, 3), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+#     #img = cv2.dilate(img, kernel, iterations=1)
+#     #img = cv2.erode(img, kernel, iterations=1)
+#     # cv2.medianBlur(img, 3)
+#     img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 #     #img = cv2.GaussianBlur(thresh, (5,5), 0)
 #     #img = cv2.medianBlur(img,5)
 #     return img
@@ -96,6 +96,28 @@ def handle_photo(update, context):
             update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
 
+def handle_tweet_request(update, context):
+    print("handle_tweet_request", update)
+    try:
+        if len(context.args) == 0:
+            text_to_process = update["message"]["reply_to_message"]["text"]
+        else:
+            text_to_process = " ".join(context.args)
+        text_ret = TextResult.from_text(text_to_process)  #process_text(update["message"]["reply_to_message"]["text"])
+        location, resources = text_ret.location, text_ret.resources
+        #tweet_link = get_twitter_link(text_ret.location, text_ret.resources)
+        #_, _, resources, tags, location = process_text(text_to_process, True)
+        if location == []:
+            location = ["delhi"]
+        tweet_link = get_twitter_link(location, resources)
+        if tweet_link == "":
+            update.message.reply_text("Couldn\'t find resources or city name")
+        else:
+            update.message.reply_text(text = "[Tweets for {}]({})".format(" ".join(resources + location), tweet_link), parse_mode = ParseMode.MARKDOWN)
+    except Exception as e:
+        print(e)
+        update.message.reply_text("Please send the command as a reply to a message for which you would like twitter leads")
+        
 def error(update, context):
     """Log Errors caused by Updates."""
     print(context.error)
@@ -110,6 +132,7 @@ def main():
     dp = updater.dispatcher
     
     # Add Handlers
+    dp.add_handler(CommandHandler("tweets", handle_tweet_request, pass_args = True))
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
