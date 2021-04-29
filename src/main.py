@@ -114,7 +114,7 @@ def handle_tweet_request(update, context):
             update.message.reply_text(text = "[Tweets for {}]({})".format(" ".join(resources + location), tweet_link), parse_mode = ParseMode.MARKDOWN)
     except Exception as e:
         print(e)
-        update.message.reply_text("Please send the command as a reply to a message for which you would like twitter leads")
+        update.message.reply_text("Please send the command as a reply to a message for which you would like twitter leads\nYou can also send the query as follows '/tweets icu delhi ventilator'")
         
 def error(update, context):
     """Log Errors caused by Updates."""

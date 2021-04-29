@@ -65,7 +65,7 @@ def process_text(text):
     for match in contains_iter(["urgent", "require", "need", "please", "pls", "request"], text):
         message_type = "request"
 
-    for match in contains_iter(cities_list, text, "{i<=1,s<=1,d<=1,i+d+s<=1}"):
+    for match in contains_iter(cities_list, text, "{i<=1,s<=1,d<=1,i+d+s<=1}", 6):
         location.append(match)
 
     ret = {}

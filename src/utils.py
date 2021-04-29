@@ -10,7 +10,7 @@ def contains_iter(word_list, text, fuzzy=None, fuzzy_len=4):
             yield i.group()
     else:
         for word in word_list:
-            s = "(" + word + ")" + fuzzy if len(word) > 4 else word
+            s = "(" + word + ")" + fuzzy if len(word) > fuzzy_len else word
             r = re.compile(s) # fuzzy is not None
             if re.search(r, text) is not None:
                 yield word
