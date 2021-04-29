@@ -97,6 +97,10 @@ def handle_photo(update, context):
 
 def handle_tweet_request(update, context):
     print("handle_tweet_request", update)
+    if "tweets_enabled" not in context.chat_data:
+        context.chat_data["tweets_enabled"] = True
+    if not context.chat_data["tweets_enabled"]:
+        return
     try:
         if len(context.args) == 0:
             text_to_process = update["message"]["reply_to_message"]["text"]
@@ -116,7 +120,15 @@ def handle_tweet_request(update, context):
     except Exception as e:
         print(e)
         update.message.reply_text("Please send the command as a reply to a message for which you would like twitter leads\nYou can also send the query as follows '/tweets icu delhi ventilator'")
-        
+
+def enable_tweets(update, context):
+    context.chat_data["tweets_enabled"] = True
+    update.message.reply_text("Ok")
+
+def disable_tweets(update, context):
+    context.chat_data["tweets_enabled"] = False
+    update.message.reply_text("Ok")
+    
 def error(update, context):
     """Log Errors caused by Updates."""
     print(context.error)
@@ -133,6 +145,8 @@ def main():
     # Add Handlers
     dp.add_handler(CommandHandler("tweets", handle_tweet_request, pass_args = True))
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("enable_tweets", enable_tweets))
+    dp.add_handler(CommandHandler("disable_tweets", disable_tweets))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
 

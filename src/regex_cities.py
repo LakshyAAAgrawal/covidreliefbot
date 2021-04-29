@@ -81,6 +81,7 @@ cities_list = [
     "begusarai",
     "belagavi",
     "bellampalle",
+    "berhampur",
     "ballari",
     "belonia",
     "bettiah",
