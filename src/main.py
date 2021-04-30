@@ -95,6 +95,22 @@ def handle_photo(update, context):
             update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
         os.remove(img_path)
 
+def find_leads(update, context):
+    if len(context.args) == 0:
+        text_to_process = update["message"]["reply_to_message"]["text"]
+    else:
+        text_to_process = " ".join(context.args)
+    text_ret = TextResult.from_text(text_to_process)  #process_text(update["message"]["reply_to_message"]["text"])
+    location, resources = text_ret.location, text_ret.resources
+    if "oxygen" in resources:
+        reply = fetch_data_from_API("oxygen", location)
+        if reply == "":
+            update.message.reply_text("No leads found for " + " ".join(location) + " " + " ".join(resources))
+        else:
+            update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
+    else:
+        update.message.reply_text("Only oxygen leads supported right now")
+    
 def handle_tweet_request(update, context):
     print("handle_tweet_request", update)
     if "tweets_enabled" not in context.chat_data:
@@ -116,11 +132,11 @@ def handle_tweet_request(update, context):
         if tweet_link == "":
             update.message.reply_text("Couldn\'t find resources or city name")
         else:
-            update.message.reply_text(text = "[Tweets for {}]({})".format(" ".join(resources + location), tweet_link), parse_mode = ParseMode.MARKDOWN)
+            update.message.reply_text(text = "[Tweets for {}. Click here]({})".format(" ".join(resources + location), tweet_link), parse_mode = ParseMode.MARKDOWN)
     except Exception as e:
         print(e)
         update.message.reply_text("Please send the command as a reply to a message for which you would like twitter leads\nYou can also send the query as follows '/tweets icu delhi ventilator'")
-
+        
 def enable_tweets(update, context):
     context.chat_data["tweets_enabled"] = True
     update.message.reply_text("Ok")
@@ -147,6 +163,7 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("enable_tweets", enable_tweets))
     dp.add_handler(CommandHandler("disable_tweets", disable_tweets))
+    dp.add_handler(CommandHandler("find_leads", find_leads, pass_args = True))
     dp.add_handler(MessageHandler(Filters.photo, handle_photo))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
 
