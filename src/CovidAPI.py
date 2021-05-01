@@ -40,7 +40,10 @@ def get_oxygen_df_IIITD():
 
 def fetch_data_from_API(resource, location):
     if resource == "oxygen":
-        df = get_oxygen_df(location)
+        try:
+            df = get_oxygen_df(location)
+        except:
+            return ""
         res = []
         ret = ""
         for idx, row in df.iterrows():

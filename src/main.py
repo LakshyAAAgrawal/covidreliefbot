@@ -97,7 +97,10 @@ def handle_photo(update, context):
 
 def find_leads(update, context):
     if len(context.args) == 0:
-        text_to_process = update["message"]["reply_to_message"]["text"]
+        try:
+            text_to_process = update["message"]["reply_to_message"]["text"]
+        except:
+            update.message.reply_text("Kindly send the requirements as follows: '/find_leads oxygen in delhi'\nyou can also reply to a message with a request with '/find_leads'")
     else:
         text_to_process = " ".join(context.args)
     text_ret = TextResult.from_text(text_to_process)  #process_text(update["message"]["reply_to_message"]["text"])
