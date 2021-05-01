@@ -13,6 +13,22 @@ def read_file(url):
     s=requests.get(url).content
     return pd.read_csv(io.StringIO(s.decode('utf-8')), skiprows=0).fillna('')
 
+def get_beds_df(city_names):
+    df = read_file(get_url("1KtDiUWbYtGVWf9gO4FN1AUUerexnsHyQYa0AiKmNE3k", "411964277"))
+    cols = ["Hospital Name", "Phone Number", "STATE", "LOCATION (CITY)", "Status", "DATETIME", "Special Notes", "Number of Beds with Ventilator", "Beds with oxygen"]
+    df.columns = cols + [str(i) for i in range(len(df.columns)-len(cols))]
+    df = df[cols]
+    df = df[df["Status"] == "Beds Available"]
+    df = df[df["DATETIME"] != ""]
+    df["LOCATION"] = df["STATE"].str.lower().astype("str") + " " + df["LOCATION (CITY)"].str.lower().astype("str")
+    df = df.drop(["STATE", "LOCATION (CITY)"], axis=1)
+    df = df[df["LOCATION"].str.contains("(" + ")|(".join(city_names) + ")", regex=True)]
+    df["DATETIME"] = pd.to_datetime(df[df["DATETIME"] != ""]["DATETIME"].astype("str") + " 2021", format="%d/%m %I:%M %p %Y", errors="coerce")
+    df = df[df["DATETIME"].notna()]
+    df = df.sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
+    df["Special Notes"] = df["Special Notes"].str.replace("\n", " ")
+    return df.loc[:5].sample(n=1)
+
 def get_oxygen_df(city_names):
     df = read_file(get_url("16Ez6gDbBHtIbZRkoe3h6yG4eZeERZZEZ_LzNQ-w1lpM", "99421346"))
     cols = ["NAME", "CONTACT", "STATE", "LOCATION (CITY)", "STATUS", "DATETIME", "PRICE", "CYLINDER", "CANS", "REFILL", "ADDITIONAL INFO"] 
@@ -38,25 +54,30 @@ def get_oxygen_df_IIITD():
     df = df.sort_values(by="Last verified", ascending=False).reset_index(drop=True).loc[:10,:]
     return df
 
-def fetch_data_from_API(resource, location):
-    if resource == "oxygen":
+def fetch_data_from_API(resources, locations):
+    resource_func = {
+        "oxygen": get_oxygen_df,
+        "bed": get_beds_df,
+        "beds": get_beds_df,
+        "hospital": get_beds_df
+    }
+    ret = ""
+    for resource in resources:
         try:
-            df = get_oxygen_df(location)
+            df = resource_func[resource](locations)
         except:
-            return ""
-        res = []
-        ret = ""
+            ret += "No leads available for " + resource + "\n"
+            continue
+        if ret != "":
+            ret += "\n"
+        ret += "*" + resource + "*\n"
         for idx, row in df.iterrows():
             #ret += "===============\n"
             for col in row.index:
                 if row[col] == "":
                     continue
                 ret += "*{}*: {}\n".format(col, row[col])
-            #ret += "===============\n"
-            #res.append(ret)
-        return ret
-    else:
-        return "All the resources are available at https://t.me/covid_iiitd"
+    return ret
 
 def get_twitter_link(cities, resources):
     if resources == [] or cities == []:

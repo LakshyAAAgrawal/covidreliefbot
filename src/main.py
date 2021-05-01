@@ -105,14 +105,11 @@ def find_leads(update, context):
         text_to_process = " ".join(context.args)
     text_ret = TextResult.from_text(text_to_process)  #process_text(update["message"]["reply_to_message"]["text"])
     location, resources = text_ret.location, text_ret.resources
-    if "oxygen" in resources:
-        reply = fetch_data_from_API("oxygen", location)
-        if reply == "":
-            update.message.reply_text("No leads found for " + " ".join(location) + " " + " ".join(resources))
-        else:
-            update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
+    reply = fetch_data_from_API(resources, location)
+    if reply == "":
+        update.message.reply_text("No leads found for " + " ".join(location) + " " + " ".join(resources))
     else:
-        update.message.reply_text("Only oxygen leads supported right now")
+        update.message.reply_text(reply, parse_mode = ParseMode.MARKDOWN)
     
 def handle_tweet_request(update, context):
     print("handle_tweet_request", update)
