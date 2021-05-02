@@ -3,6 +3,7 @@ import regex as re
 
 from utils import contains_iter
 from regex_cities import cities_list
+from lists import resource_name_list
 
 class TextResult():
     def __init__(self, full_text, contacts = [], resources = [], location = [],
@@ -55,7 +56,7 @@ def process_text(text):
     for match in re.finditer('#[0-9A-Za-z]*', text):
         tags.append(match.group()[1:])
 
-    for match in contains_iter(['oxygen', 'cylinder', 'ventilator', 'plasma', 'bed', 'icu', 'refill', 'ambulance', 'food', 'hospital', 'remdesivir', 'concentrator', 'beds', 'home icu', 'favipiravir', 'tocilizumab', 'fabiflu', 'test', 'tests', 'crematorium', 'baricitinib'], text, "{i<=1,s<=1,d<=1,i+d+s<=1}"):
+    for match in contains_iter(resource_name_list, text, "{i<=1,s<=1,d<=1,i+d+s<=1}"):
         resources.append(match)
         message_type = "resource"
 

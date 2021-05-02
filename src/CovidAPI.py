@@ -5,6 +5,56 @@ import json
 import urllib.parse
 
 from text_fns import TextResult
+from lists import resource_name_list
+
+class Resources:
+    def __init__(self):
+        pass
+
+    def get_beds_df(self):
+        df = read_file(get_url("1KtDiUWbYtGVWf9gO4FN1AUUerexnsHyQYa0AiKmNE3k", "411964277"))
+        cols = ["Hospital Name", "Phone Number", "STATE", "LOCATION (CITY)", "Status", "DATETIME", "Special Notes", "Number of Beds with Ventilator", "Beds with oxygen"]
+        df.columns = cols + [str(i) for i in range(len(df.columns)-len(cols))]
+        df = df[cols]
+        df = df[df["Status"] == "Beds Available"]
+        df = df[df["DATETIME"] != ""]
+        df["LOCATION"] = df["STATE"].str.lower().astype("str") + " " + df["LOCATION (CITY)"].str.lower().astype("str")
+        df = df.drop(["STATE", "LOCATION (CITY)"], axis=1)
+        df["DATETIME"] = pd.to_datetime(df[df["DATETIME"] != ""]["DATETIME"].astype("str") + " 2021", format="%d/%m %I:%M %p %Y", errors="coerce")
+        df = df[df["DATETIME"].notna()]
+        df = df.sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
+        df["Special Notes"] = df["Special Notes"].str.replace("\n", " ")
+        self.resources["beds"][]
+    
+    def update_resources():
+        self.update_beds()
+        self.update_oxygen()
+
+    def find_leads(resources, location):
+        resource_func = {
+            "oxygen": get_oxygen_df,
+            "bed": get_beds_df,
+            "beds": get_beds_df,
+            "hospital": get_beds_df
+        }
+        ret = ""
+        for resource in resources:
+            try:
+                df = resource_func[resource](locations)
+            except:
+                ret += "No leads available for " + resource + "\n"
+                continue
+            if ret != "":
+                ret += "\n"
+            ret += "*" + resource + "*\n"
+            for idx, row in df.iterrows():
+                #ret += "===============\n"
+                for col in row.index:
+                    if row[col] == "":
+                        continue
+                    ret += "*{}*: {}\n".format(col, row[col])
+        return ret
+
 
 def get_url(sheet_id, gid):
     return "https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&gid={}".format(sheet_id, gid)

@@ -18,7 +18,14 @@ import numpy as np
 import re
 from image_vision_utils import preprocess_img
 
-BEGINMSG = "Hi. Welcome to Covid Relief Bot"
+BEGINMSG = """The bot is aimed to be added to covid resource sharing groups, however, it can be used as a DM as well.
+
+The bot supports the following features:
+1. /find_leads - Returns verified leads for resources at given location. Either select a message with a request as a reply or just write the request, "/find_leads oxygen in delhi". Currently Oxygen and Beds search is supported and others are being added
+2. /tweets - Find twitter feed of leads for given resource at location - "/tweets oxygen in delhi"
+3. Extract meaningful information from images - Which resource is being shared, what are the contact numbers for the resource, location/city and any hash tags. This makes the text searchable. You can just send an image to the bot for this.
+
+To start, either add the bot to any group, or visit @covidreliefbot and send /start@covidreliefbot"""
 
 MENU, GET_LOCATION = range(2)
 
