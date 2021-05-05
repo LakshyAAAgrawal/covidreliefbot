@@ -2,7 +2,7 @@ import logging
 import regex as re
 
 from text_fns import process_text, TextResult
-from CovidAPI import fetch_data_from_API, get_twitter_link, get_best_resource_for, sync_resource
+from CovidAPI import fetch_data_from_API, get_twitter_link, get_best_resource_for, sync_resource, Resources
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -28,6 +28,8 @@ The bot supports the following features:
 To start, either add the bot to any group, or visit @covidreliefbot and send /start@covidreliefbot"""
 
 MENU, GET_LOCATION = range(2)
+
+r = Resources()
 
 logging.basicConfig(format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', level = logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,7 +62,7 @@ def fetch_info(update, context):
     resource = context.user_data['resource_wanted']
     location = update.message.text
     #update.message.reply_text(fetch_data_from_API(resource, location))
-    res_list = fetch_data_from_API(resource, location)
+    res_list = r.find_leads(resource, location) # fetch_data_from_API(resource, location)
     for resource in res_list:
         context.bot.send_message(chat_id=update.message.chat_id, text=resource, parse_mode = ParseMode.MARKDOWN)
     return exit_convo(update, context)

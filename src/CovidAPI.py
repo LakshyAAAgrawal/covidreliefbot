@@ -3,44 +3,79 @@ import io
 import requests
 import json
 import urllib.parse
+import datetime
 
 from text_fns import TextResult
 from lists import resource_name_list
 
 class Resources:
     def __init__(self):
-        pass
+        self.data = {
+            "bed": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"]),
+            "oxygen": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"])
+        }
+        self.last_updated = None
+        self.update_resources()
 
-    def get_beds_df(self):
+    def beds1(self):
         df = read_file(get_url("1KtDiUWbYtGVWf9gO4FN1AUUerexnsHyQYa0AiKmNE3k", "411964277"))
-        cols = ["Hospital Name", "Phone Number", "STATE", "LOCATION (CITY)", "Status", "DATETIME", "Special Notes", "Number of Beds with Ventilator", "Beds with oxygen"]
+        cols = ["Name", "Contact", "STATE", "LOCATION (CITY)", "Status", "DATETIME", "Special Notes", "Number of Beds with Ventilator", "Beds with oxygen"]
         df.columns = cols + [str(i) for i in range(len(df.columns)-len(cols))]
         df = df[cols]
         df = df[df["Status"] == "Beds Available"]
         df = df[df["DATETIME"] != ""]
         df["LOCATION"] = df["STATE"].str.lower().astype("str") + " " + df["LOCATION (CITY)"].str.lower().astype("str")
         df = df.drop(["STATE", "LOCATION (CITY)"], axis=1)
+        #df = df[df["LOCATION"].str.contains("(" + ")|(".join(city_names) + ")", regex=True)]
         df["DATETIME"] = pd.to_datetime(df[df["DATETIME"] != ""]["DATETIME"].astype("str") + " 2021", format="%d/%m %I:%M %p %Y", errors="coerce")
         df = df[df["DATETIME"].notna()]
-        df = df.sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
+        #df = df.sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
         df["Special Notes"] = df["Special Notes"].str.replace("\n", " ")
-        self.resources["beds"][]
+        self.data["bed"] = self.data["bed"][self.data["bed"]["source"] != 1]
+        df["source"] = 1
+        self.data["bed"] = self.data["bed"].append(df)
+
+    def oxygen1(self):
+        df = read_file(get_url("16Ez6gDbBHtIbZRkoe3h6yG4eZeERZZEZ_LzNQ-w1lpM", "99421346"))
+        cols = ["NAME", "CONTACT", "STATE", "LOCATION (CITY)", "STATUS", "DATETIME", "PRICE", "CYLINDER", "CANS", "REFILL", "ADDITIONAL INFO"] 
+        df.columns = cols + [str(i) for i in range(len(df.columns)-len(cols))]
+        df = df[cols]
+        df = df[df["STATUS"] == "Available"]
+        df = df[df["DATETIME"] != ""]
+        df["LOCATION"] = df["STATE"].str.lower().astype("str") + " " + df["LOCATION (CITY)"].str.lower().astype("str")
+        df = df.drop(["STATE", "LOCATION (CITY)"], axis=1)
+        #df = df[df["LOCATION"].str.contains("(" + ")|(".join(city_names) + ")", regex=True)]
+        df["DATETIME"] = pd.to_datetime(df[df["DATETIME"] != ""]["DATETIME"].astype("str") + " 2021", format="%d/%m %I:%M %p %Y", errors="coerce")
+        df = df[df["DATETIME"].notna()]
+        #df = df.sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
+        df["ADDITIONAL INFO"] = df["ADDITIONAL INFO"].str.replace("\n", " ")
+        self.data["oxygen"] = self.data["oxygen"][self.data["oxygen"]["source"] != 1]
+        df["source"] = 1
+        self.data["oxygen"] = self.data["oxygen"].append(df)
     
-    def update_resources():
+    def update_beds(self):
+        self.beds1()
+
+    def update_oxygen(self):
+        self.oxygen1()
+        
+    def update_resources(self):
         self.update_beds()
         self.update_oxygen()
+        for res in self.data:
+            self.data[res] = self.data[res].fillna("")
+            self.data[res] = self.data[res].sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
+        self.last_updated = datetime.datetime.now()
 
-    def find_leads(resources, location):
-        resource_func = {
-            "oxygen": get_oxygen_df,
-            "bed": get_beds_df,
-            "beds": get_beds_df,
-            "hospital": get_beds_df
-        }
+    def find_leads(self, resources, locations):
+        if self.last_updated == None or (datetime.datetime.now() - self.last_updated).seconds >= 180:
+            self.update_resources()
         ret = ""
         for resource in resources:
             try:
-                df = resource_func[resource](locations)
+                df = self.data[resource].drop(["source"], axis=1)
+                df = df[df["LOCATION"].str.contains("(" + ")|(".join(locations) + ")", regex=True)]
+                df = df.loc[:5].sample(n=1)
             except:
                 ret += "No leads available for " + resource + "\n"
                 continue
@@ -54,7 +89,6 @@ class Resources:
                         continue
                     ret += "*{}*: {}\n".format(col, row[col])
         return ret
-
 
 def get_url(sheet_id, gid):
     return "https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&gid={}".format(sheet_id, gid)
