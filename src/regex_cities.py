@@ -190,7 +190,6 @@ cities_list = [
     "guntur",
     "gurdaspur",
     "gurgaon",
-    "gurgaon",
     "guruvayoor",
     "guwahati",
     "gwalior",

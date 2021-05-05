@@ -12,7 +12,8 @@ class Resources:
     def __init__(self):
         self.data = {
             "bed": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"]),
-            "oxygen": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"])
+            "oxygen": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"]),
+            "plasma": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"])
         }
         self.last_updated = None
         self.update_resources()
@@ -52,16 +53,34 @@ class Resources:
         self.data["oxygen"] = self.data["oxygen"][self.data["oxygen"]["source"] != 1]
         df["source"] = 1
         self.data["oxygen"] = self.data["oxygen"].append(df)
-    
+
+    def plasma1(self):
+        df = read_file(get_url("1jouo3H8BY78AACdka00kJaVEq9ochQtL24-cf8biHoY", "981656284"))
+        cols = ["DATE", "VERIFICATION STATUS", "RESOURCE/ORGANISATION NAME", "LOCATION", "RESOURCE SPECIFICS", "TIME OF VERIFICATION", "Contact", "RELEVANT INFORMATION"] 
+        df.columns = cols + [str(i) for i in range(len(df.columns)-len(cols))]
+        df = df[cols]
+        df = df[df["DATE"] != ""]
+        df["DATETIME"] = pd.to_datetime(df[df["DATE"] != ""]["DATE"], format="%d/%m/%Y", errors="coerce")
+        df = df[df["DATETIME"].notna()]
+        df = df.drop(["DATE", "RESOURCE SPECIFICS"], axis=1)
+        df["source"] = 1
+        df["LOCATION"] = df["LOCATION"].str.lower()
+        self.data["plasma"] = self.data["plasma"][self.data["plasma"]["source"] != 1]
+        self.data["plasma"] = self.data["plasma"].append(df)
+
     def update_beds(self):
         self.beds1()
 
     def update_oxygen(self):
         self.oxygen1()
-        
+
+    def update_plasma(self):
+        self.plasma1()
+
     def update_resources(self):
         self.update_beds()
         self.update_oxygen()
+        self.update_plasma()
         for res in self.data:
             self.data[res] = self.data[res].fillna("")
             self.data[res] = self.data[res].sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
@@ -73,10 +92,11 @@ class Resources:
         ret = ""
         for resource in resources:
             try:
-                df = self.data[resource].drop(["source"], axis=1)
-                df = df[df["LOCATION"].str.contains("(" + ")|(".join(locations) + ")", regex=True)]
+                df = self.data[resource].drop(["source"], axis=1).reset_index(drop = True)
+                df = df[df["LOCATION"].str.contains("(" + ")|(".join(locations) + ")", regex=True)].reset_index(drop = True)
                 df = df.loc[:5].sample(n=1)
-            except:
+            except Exception as e:
+                print(e)
                 ret += "No leads available for " + resource + "\n"
                 continue
             if ret != "":
@@ -95,7 +115,7 @@ def get_url(sheet_id, gid):
 
 def read_file(url):
     s=requests.get(url).content
-    return pd.read_csv(io.StringIO(s.decode('utf-8')), skiprows=0).fillna('')
+    return pd.read_csv(io.StringIO(s.decode('utf-8')), skiprows=0, dtype=str).fillna('')
 
 def get_beds_df(city_names):
     df = read_file(get_url("1KtDiUWbYtGVWf9gO4FN1AUUerexnsHyQYa0AiKmNE3k", "411964277"))
@@ -137,31 +157,6 @@ def get_oxygen_df_IIITD():
     df = df[df["Last verified"].notna()]
     df = df.sort_values(by="Last verified", ascending=False).reset_index(drop=True).loc[:10,:]
     return df
-
-def fetch_data_from_API(resources, locations):
-    resource_func = {
-        "oxygen": get_oxygen_df,
-        "bed": get_beds_df,
-        "beds": get_beds_df,
-        "hospital": get_beds_df
-    }
-    ret = ""
-    for resource in resources:
-        try:
-            df = resource_func[resource](locations)
-        except:
-            ret += "No leads available for " + resource + "\n"
-            continue
-        if ret != "":
-            ret += "\n"
-        ret += "*" + resource + "*\n"
-        for idx, row in df.iterrows():
-            #ret += "===============\n"
-            for col in row.index:
-                if row[col] == "":
-                    continue
-                ret += "*{}*: {}\n".format(col, row[col])
-    return ret
 
 def get_twitter_link(cities, resources):
     if resources == [] or cities == []:

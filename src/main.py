@@ -2,7 +2,7 @@ import logging
 import regex as re
 
 from text_fns import process_text, TextResult
-from CovidAPI import fetch_data_from_API, get_twitter_link, get_best_resource_for, sync_resource, Resources
+from CovidAPI import get_twitter_link, get_best_resource_for, sync_resource, Resources
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import ConversationHandler, CallbackQueryHandler, PicklePersistence
@@ -114,7 +114,7 @@ def find_leads(update, context):
         text_to_process = " ".join(context.args)
     text_ret = TextResult.from_text(text_to_process)  #process_text(update["message"]["reply_to_message"]["text"])
     location, resources = text_ret.location, text_ret.resources
-    reply = fetch_data_from_API(resources, location)
+    reply = r.find_leads(resources, location)
     if reply == "":
         update.message.reply_text("No leads found for " + " ".join(location) + " " + " ".join(resources))
     else:
