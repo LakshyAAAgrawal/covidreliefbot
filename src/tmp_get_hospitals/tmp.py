@@ -21,7 +21,7 @@ def find_resources(old_data, new_data):
     for resource in resources:
         for hospital in list(old_data[resource].keys()):
             if new_data[resource][hospital]['vacant'] > old_data[resource][hospital]['vacant']:
-                print(hospital_name,"Got new",resource,  new_data[resource][hospital]['vacant'])
+                print(hospital,"Got new",resource,  new_data[resource][hospital]['vacant'])
 
             
 old_data = fetch_details()
