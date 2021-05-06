@@ -19,3 +19,4 @@ six==1.15.0
 soupsieve==2.2.1
 tornado==6.1
 urllib3==1.25.11
+regex==2021.4.4

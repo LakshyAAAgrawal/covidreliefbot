@@ -1,5 +1,12 @@
 # CovidRelief Bot
-A telegram chatbot to follow Covid resources in India
+A telegram chatbot to follow Covid resources in India. Can be added to covid resource groups or used with DM.
+
+Features:
+1. /find_leads - Verified leads for resources at given location. Either select a message with a request as a reply or just write the request, "/find_leads oxygen in delhi". Oxygen and Beds supported at the moment.
+2. /tweets - Find twitter feed of leads for resource at location - "/tweets oxygen in delhi"
+3. Extract information from images - Name of resource, contact number and location.
+
+Can be used by visiting [https://t.me/covidreliefbot](https://t.me/covidreliefbot)
 
 ## Development Setup
 1. Clone the repository
@@ -8,22 +15,11 @@ A telegram chatbot to follow Covid resources in India
    cp src/config.json.sample src/config.json
    ```
 3. Enter the configuration details in src/config.json
-4. create a virtual environment for python:
+4. Build the Docker image
+   ```bash
+   docker build -t covidrelief .
    ```
-   virtualenv covidreliefbot
+5. Run the Docker image
+   ```bash
+   docker run -it covidrelief
    ```
-   Activate the virtual environment
-   ```
-   source covidreliefbot/bin/activate
-   ```
-5. Install the required modules:
-   ```
-   pip install -r requirements.txt
-   ```
-6. Run the bot
-   ```
-   cd tessdata
-   export export TESSDATA_PREFIX=$(pwd)
-   cd ../src/
-   python3 main.py
-   ```	
