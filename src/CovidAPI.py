@@ -69,8 +69,6 @@ class Resources:
         self.data["plasma"] = self.data["plasma"][self.data["plasma"]["source"] != 1]
         self.data["plasma"] = self.data["plasma"].append(df)
 
-    
-
     def update_beds(self):
         self.beds1()
 
