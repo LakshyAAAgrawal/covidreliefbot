@@ -6,14 +6,15 @@ import urllib.parse
 import datetime
 
 from text_fns import TextResult
-from lists import resource_name_list
+from lists import resource_name_list, meds_names
 
 class Resources:
     def __init__(self):
         self.data = {
             "bed": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"]),
             "oxygen": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"]),
-            "plasma": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"])
+            "plasma": pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"]),
+            **{med: pd.DataFrame(columns=["source", "LOCATION", "DATETIME", "Contact"]) for med in meds_names}
         }
         self.last_updated = None
         self.update_resources()
@@ -68,6 +69,8 @@ class Resources:
         self.data["plasma"] = self.data["plasma"][self.data["plasma"]["source"] != 1]
         self.data["plasma"] = self.data["plasma"].append(df)
 
+    
+
     def update_beds(self):
         self.beds1()
 
@@ -77,10 +80,14 @@ class Resources:
     def update_plasma(self):
         self.plasma1()
 
+    def update_medicines(self):
+        self.meds1()
+
     def update_resources(self):
         self.update_beds()
         self.update_oxygen()
         self.update_plasma()
+        self.update_medicines()
         for res in self.data:
             self.data[res] = self.data[res].fillna("")
             self.data[res] = self.data[res].sort_values(by="DATETIME", ascending=False).reset_index(drop=True)
